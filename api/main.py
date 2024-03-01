@@ -4,7 +4,7 @@ import jwt
 import httpx
 from pydantic import Field
 from pydantic_settings import BaseSettings
-from fastapi import FastAPI, security, Security, Form, HTTPException, Depends
+from fastapi import FastAPI, security, Security, HTTPException, Depends
 
 
 #
@@ -90,5 +90,5 @@ def basic(user_token: Annotated[Dict[Any, Any], Depends(user_token)]):
 
 
 @app.get("/scopes")
-def basic(user_token: Annotated[Dict[Any, Any], Depends(user_token)]):
+def scopes(user_token: Annotated[Dict[Any, Any], Depends(user_token)]):
     return user_token["scope"].split(" ")
