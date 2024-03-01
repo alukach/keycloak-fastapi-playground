@@ -40,12 +40,9 @@ oauth2_scheme = security.OAuth2AuthorizationCodeBearer(
     authorizationUrl=f"{settings.keycloak_oidc_api_url}/auth",
     tokenUrl=f"{settings.keycloak_oidc_api_url}/token",
     scopes={
-        "stac:collection:create": "Create collection",
-        "stac:collection:update": "Update collection",
-        "stac:collection:delete": "Delete collection",
-        "stac:item:create": "Create item",
-        "stac:item:update": "Update item",
-        "stac:item:delete": "Delete item",
+        f"stac:{resource}:{action}": f"{action.title()} {resource}"
+        for resource in ["collection", "item"]
+        for action in ["create", "update", "delete"]
     },
 )
 
