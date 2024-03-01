@@ -37,10 +37,12 @@ oauth2_scheme = security.OAuth2AuthorizationCodeBearer(
     authorizationUrl=f"{settings.oidc_api}/auth",
     tokenUrl=f"{settings.oidc_api}/token",
     scopes={
-        "stac:create": "Create STAC Items",
-        "stac:read": "Read STAC Items",
-        "stac:update": "Update STAC Items",
-        "stac:delete": "Delete STAC Items",
+        "stac:collection:create": "Create collection",
+        "stac:collection:update": "Update collection",
+        "stac:collection:delete": "Delete collection",
+        "stac:item:create": "Create item",
+        "stac:item:update": "Update item",
+        "stac:item:delete": "Delete item",
     },
 )
 
