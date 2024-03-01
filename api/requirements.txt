@@ -5,3 +5,4 @@ fastapi-keycloak
 httpx
 python-multipart
 pyjwt
+cryptography

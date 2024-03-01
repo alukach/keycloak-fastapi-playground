@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Dict, Optional
+from typing import Annotated, Any, Dict, List, Optional
 
 import jwt
 from fastapi import FastAPI, HTTPException, Security, security, status
@@ -11,26 +11,34 @@ from pydantic_settings import BaseSettings
 #
 class Settings(BaseSettings):
     keycloak_url: str
+    keycloak_internal_url: Optional[str] = None
     keycloak_realm: str
     keycloak_client_id: str
     keycloak_client_secret: Optional[str] = Field(None, repr=False)
+    permitted_jwt_audiences: List[str] = ["account"]
 
     @property
-    def oidc_api(self):
+    def keycloak_oidc_api_url(self):
         return (
             f"{self.keycloak_url}/realms/{self.keycloak_realm}/protocol/openid-connect"
         )
 
+    @property
+    def keycloak_jwks_url(self):
+        base_url = self.keycloak_internal_url or self.keycloak_url
+        return f"{base_url}/realms/{self.keycloak_realm}/protocol/openid-connect/certs"
+
 
 settings = Settings()
+jwks_client = jwt.PyJWKClient(settings.keycloak_jwks_url)  # Caches JWKs
 
 
 #
 # Dependencies
 #
 oauth2_scheme = security.OAuth2AuthorizationCodeBearer(
-    authorizationUrl=f"{settings.oidc_api}/auth",
-    tokenUrl=f"{settings.oidc_api}/token",
+    authorizationUrl=f"{settings.keycloak_oidc_api_url}/auth",
+    tokenUrl=f"{settings.keycloak_oidc_api_url}/token",
     scopes={
         "stac:collection:create": "Create collection",
         "stac:collection:update": "Update collection",
@@ -49,10 +57,9 @@ def user_token(
     # Parse & validate token
     token = jwt.decode(
         token_str,
-        options={
-            # TODO: This is purely for illustrative purposes, for production you would want to verify the signature
-            "verify_signature": False
-        },
+        jwks_client.get_signing_key_from_jwt(token_str).key,
+        algorithms=["RS256"],
+        audience=settings.permitted_jwt_audiences,
     )
 
     # Validate scopes (if required)
