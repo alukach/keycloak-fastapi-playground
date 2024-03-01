@@ -1,10 +1,9 @@
-from typing import Annotated, Optional, AsyncGenerator, Dict, Any
+from typing import Annotated, Any, Dict, Optional
 
 import jwt
-import httpx
+from fastapi import FastAPI, HTTPException, Security, security, status
 from pydantic import Field
 from pydantic_settings import BaseSettings
-from fastapi import FastAPI, security, Security, HTTPException, Depends
 
 
 #
@@ -43,26 +42,31 @@ oauth2_scheme = security.OAuth2AuthorizationCodeBearer(
 )
 
 
-async def async_client() -> AsyncGenerator[httpx.AsyncClient, None]:
-    """
-    Dependency to create async http requests and to gracefully handle any response
-    errors.
-    """
-    async with httpx.AsyncClient() as client:
-        try:
-            yield client
-        except httpx.HTTPStatusError as e:
+def user_token(
+    token_str: Annotated[str, Security(oauth2_scheme)],
+    required_scopes: security.SecurityScopes,
+):
+    # Parse & validate token
+    token = jwt.decode(
+        token_str,
+        options={
+            # TODO: This is purely for illustrative purposes, for production you would want to verify the signature
+            "verify_signature": False
+        },
+    )
+
+    # Validate scopes (if required)
+    for scope in required_scopes.scopes:
+        if scope not in token["scope"]:
             raise HTTPException(
-                status_code=e.response.status_code,
-                detail={
-                    **e.response.json(),
-                    "message": str(e),
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not enough permissions",
+                headers={
+                    "WWW-Authenticate": f'Bearer scope="{required_scopes.scope_str}"'
                 },
             )
 
-
-def user_token(token: Annotated[str, Security(oauth2_scheme)]):
-    return jwt.decode(token, options={"verify_signature": False})
+    return token
 
 
 #
@@ -78,10 +82,24 @@ app = FastAPI(
 
 
 @app.get("/")
-def basic(user_token: Annotated[Dict[Any, Any], Depends(user_token)]):
+def basic(user_token: Annotated[Dict[Any, Any], Security(user_token)]):
+    """View auth token."""
     return user_token
 
 
 @app.get("/scopes")
-def scopes(user_token: Annotated[Dict[Any, Any], Depends(user_token)]):
+def scopes(user_token: Annotated[Dict[Any, Any], Security(user_token)]):
+    """View auth token scopes."""
     return user_token["scope"].split(" ")
+
+
+@app.get(
+    "/create-collection",
+    dependencies=[Security(user_token, scopes=["stac:collection:create"])],
+)
+def create_collection():
+    """Mock endpoint to create a collection. Requires `stac:collection:create` scope."""
+    return {
+        "success": True,
+        "details": "🚀 You have the required scope to create a collection",
+    }
