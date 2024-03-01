@@ -22,9 +22,8 @@ services:
       - keycloak
     environment:
       - KEYCLOAK_URL=http://localhost:8080
-      - KEYCLOAK_INTERNAL_URL=http://keycloak:8080
-      - KEYCLOAK_REALM=master
-      - KEYCLOAK_CLIENT_ID=app-api
+    env_file:
+      - .env
     restart: unless-stopped
 
   # frontend:

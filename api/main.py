@@ -12,7 +12,6 @@ from fastapi import FastAPI, security, Security, HTTPException, Depends
 #
 class Settings(BaseSettings):
     keycloak_url: str
-    keycloak_internal_url: Optional[str] = None
     keycloak_realm: str
     keycloak_client_id: str
     keycloak_client_secret: Optional[str] = Field(None, repr=False)
@@ -23,16 +22,13 @@ class Settings(BaseSettings):
             f"{self.keycloak_url}/realms/{self.keycloak_realm}/protocol/openid-connect"
         )
 
-    @property
-    def internal_oidc_api(self):
-        return f"{self.keycloak_internal_url or self.keycloak_url}/realms/{self.keycloak_realm}/protocol/openid-connect"
+
+settings = Settings()
 
 
-settings = Settings(
-    keycloak_realm="stac-api-playground-1",
-    keycloak_client_id="stac-api",
-)
-
+#
+# Dependencies
+#
 oauth2_scheme = security.OAuth2AuthorizationCodeBearer(
     authorizationUrl=f"{settings.oidc_api}/auth",
     tokenUrl=f"{settings.oidc_api}/token",
@@ -47,9 +43,6 @@ oauth2_scheme = security.OAuth2AuthorizationCodeBearer(
 )
 
 
-#
-# Dependencies
-#
 async def async_client() -> AsyncGenerator[httpx.AsyncClient, None]:
     """
     Dependency to create async http requests and to gracefully handle any response
