@@ -52,12 +52,19 @@ def user_token(
     required_scopes: security.SecurityScopes,
 ):
     # Parse & validate token
-    token = jwt.decode(
-        token_str,
-        jwks_client.get_signing_key_from_jwt(token_str).key,
-        algorithms=["RS256"],
-        audience=settings.permitted_jwt_audiences,
-    )
+    try:
+        token = jwt.decode(
+            token_str,
+            jwks_client.get_signing_key_from_jwt(token_str).key,
+            algorithms=["RS256"],
+            audience=settings.permitted_jwt_audiences,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from e
 
     # Validate scopes (if required)
     for scope in required_scopes.scopes:
