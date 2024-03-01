@@ -89,6 +89,6 @@ def basic(user_token: Annotated[Dict[Any, Any], Depends(user_token)]):
     return user_token
 
 
-@app.get("/scope")
+@app.get("/scopes")
 def basic(user_token: Annotated[Dict[Any, Any], Depends(user_token)]):
     return user_token["scope"].split(" ")
