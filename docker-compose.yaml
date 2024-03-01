@@ -21,7 +21,6 @@ services:
     depends_on:
       - keycloak
     environment:
-      # - KEYCLOAK_URL=http://localhost:8080/auth
       - KEYCLOAK_URL=http://localhost:8080
       - KEYCLOAK_INTERNAL_URL=http://keycloak:8080
       - KEYCLOAK_REALM=master
