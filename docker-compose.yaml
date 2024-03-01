@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0.6
+    command: start-dev
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  api:
+    build: ./api
+    command: uvicorn main:app --host 0.0.0.0 --reload
+    volumes:
+      - ./api:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - keycloak
+    environment:
+      # - KEYCLOAK_URL=http://localhost:8080/auth
+      - KEYCLOAK_URL=http://localhost:8080
+      - KEYCLOAK_INTERNAL_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=master
+      - KEYCLOAK_CLIENT_ID=app-api
+    restart: unless-stopped
+
+  # frontend:
+  #   build: ./frontend
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - API_URL=http://localhost:8000
+  #   command: sh -c "npm install && npm run dev"
+  #   depends_on:
+  #     - api
+  #   restart: unless-stopped
