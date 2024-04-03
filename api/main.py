@@ -14,7 +14,6 @@ class Settings(BaseSettings):
     keycloak_internal_url: Optional[str] = None
     keycloak_realm: str
     keycloak_client_id: str
-    keycloak_client_secret: Optional[str] = Field(None, repr=False)
     permitted_jwt_audiences: List[str] = ["account"]
 
     @property
@@ -30,7 +29,7 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-jwks_client = jwt.PyJWKClient(settings.keycloak_jwks_url)  # Caches JWKs
+jwks_client = jwt.PyJWKClient(settings.keycloak_jwks_url)  # Caches JWKS
 
 
 #

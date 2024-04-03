@@ -1,4 +1,6 @@
-# Notes
+# Keycloak + FastAPI
+
+The idea here is that we will demonstrate using Keycloak to assign users to groups.  Those groups will be related to roles, each role will have have associated scopes.  Keycloak will have clients that.
 
 ## Tutorial
 
@@ -28,8 +30,7 @@ Let's achieve the following:
      - client type: `OpenID Connect`
      - client id: `stac-api`
    - Capability config:
-     - Client authentication: `On`
-     - Authorization: `On`
+     - Client authentication: `Off`
    - Login settings:
      - Root URL: `http://localhost:8080`
      - Valid redirect URIs: `http://localhost:8080/*`
