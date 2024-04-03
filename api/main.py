@@ -39,9 +39,9 @@ oauth2_scheme = security.OAuth2AuthorizationCodeBearer(
     authorizationUrl=f"{settings.keycloak_oidc_api_url}/auth",
     tokenUrl=f"{settings.keycloak_oidc_api_url}/token",
     scopes={
-        f"stac:{resource}:{action}": f"{action.title()} {resource}"
-        for resource in ["collection", "item"]
-        for action in ["create", "update", "delete"]
+        f"example:{resource}:{action}": f"{action.title()} {resource}"
+        for resource in ["doc"]
+        for action in ["create", "read", "update", "delete"]
     },
 )
 
@@ -83,33 +83,40 @@ def user_token(
 # App
 #
 app = FastAPI(
+    docs_url="/",
     swagger_ui_init_oauth={
-        "appName": "JupyterHub",
+        "appName": "ExampleApp",
         "clientId": settings.keycloak_client_id,
         "usePkceWithAuthorizationCodeGrant": True,
-    }
+    },
 )
 
 
-@app.get("/")
-def basic(user_token: Annotated[Dict[Any, Any], Security(user_token)]):
-    """View auth token."""
-    return user_token
-
-
-@app.get("/scopes")
+@app.get("/my-scopes")
 def scopes(user_token: Annotated[Dict[Any, Any], Security(user_token)]):
     """View auth token scopes."""
     return user_token["scope"].split(" ")
 
 
 @app.get(
-    "/create-collection",
-    dependencies=[Security(user_token, scopes=["stac:collection:create"])],
+    "/docs",
+    dependencies=[Security(user_token, scopes=["example:doc:read"])],
 )
-def create_collection():
-    """Mock endpoint to create a collection. Requires `stac:collection:create` scope."""
+def read_doc():
+    """Mock endpoint to read a doc. Requires `example:doc:read` scope."""
     return {
         "success": True,
-        "details": "🚀 You have the required scope to create a collection",
+        "details": "🚀 You have the required scope to read a doc",
+    }
+
+
+@app.post(
+    "/docs",
+    dependencies=[Security(user_token, scopes=["example:doc:create"])],
+)
+def create_doc():
+    """Mock endpoint to create a doc. Requires `example:doc:create` scope."""
+    return {
+        "success": True,
+        "details": "🚀 You have the required scope to create a doc",
     }

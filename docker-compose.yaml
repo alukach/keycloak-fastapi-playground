@@ -2,11 +2,13 @@ version: "3.8"
 
 services:
   keycloak:
-    image: quay.io/keycloak/keycloak:23.0.6
-    command: start-dev
+    image: quay.io/keycloak/keycloak:24.0.2
+    command: start-dev --import-realm
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
     ports:
       - "8080:8080"
     restart: unless-stopped
@@ -23,20 +25,6 @@ services:
     environment:
       - KEYCLOAK_URL=http://localhost:8080
       - KEYCLOAK_INTERNAL_URL=http://keycloak:8080
-    env_file:
-      - .env
+      - KEYCLOAK_REALM=demo
+      - KEYCLOAK_CLIENT_ID=example-api
     restart: unless-stopped
-
-  # frontend:
-  #   build: ./frontend
-  #   volumes:
-  #     - ./frontend:/app
-  #     - /app/node_modules
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     - API_URL=http://localhost:8000
-  #   command: sh -c "npm install && npm run dev"
-  #   depends_on:
-  #     - api
-  #   restart: unless-stopped
